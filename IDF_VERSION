@@ -1,10 +1,11 @@
-ESP-IDF v5.4.4
+Supported ESP-IDF versions: v5.4.4 and v5.5.4
 
-This project is tested against ESP-IDF v5.4.4 for the ESP32-S3 target.
+This project supports ESP-IDF v5.4.4 and v5.5.4 for the ESP32-S3 target.
+For ESP-IDF v5.5.4, use the project's sdkconfig.defaults unchanged. It explicitly selects Newlib and disables the experimental Picolibc option.
 
-Setup:
-  git clone --branch v5.4.4 --depth 1 --recursive https://github.com/espressif/esp-idf.git ~/esp/esp-idf-v5.4.4
-  cd ~/esp/esp-idf-v5.4.4
+Example setup for ESP-IDF v5.5.4:
+  git clone --branch v5.5.4 --depth 1 --recursive https://github.com/espressif/esp-idf.git ~/esp/esp-idf-v5.5.4
+  cd ~/esp/esp-idf-v5.5.4
   ./install.sh esp32s3
   . ./export.sh
 

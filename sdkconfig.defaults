@@ -1,0 +1,16 @@
+# BLE HID keyboard configuration for AtomS3 Lite (ESP32-S3).
+CONFIG_BT_ENABLED=y
+# CONFIG_BT_BLE_50_FEATURES_SUPPORTED is not set
+CONFIG_BT_BLE_42_FEATURES_SUPPORTED=y
+# CONFIG_BT_LE_50_FEATURE_SUPPORT is not set
+CONFIG_PARTITION_TABLE_SINGLE_APP_LARGE=y
+
+# This project is a BLE HID device and does not use GATT client or scanner roles.
+# CONFIG_BT_GATTC_ENABLE is not set
+# CONFIG_BT_BLE_42_SCAN_EN is not set
+# CONFIG_BT_BLE_42_DTM_TEST_EN is not set
+
+# ESP-IDF v5.5.x: use Newlib, not the experimental Picolibc option.
+# This avoids mixing Picolibc stdio headers with Newlib sys/reent.h.
+CONFIG_LIBC_NEWLIB=y
+# CONFIG_LIBC_PICOLIBC is not set

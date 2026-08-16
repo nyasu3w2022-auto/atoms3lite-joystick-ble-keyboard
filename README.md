@@ -42,7 +42,7 @@ AtomS3 LiteのHY2.0-4PポートとJoystick Unitを、Groveケーブルでその�
 
 ## ビルドと書き込み
 
-**ESP-IDF v5.4.4** を使用してください。別バージョンで生成済みの`build/`や`sdkconfig`があるとBluetoothのヘッダー構成が混在するため、切替時は必ず削除します。`/dev/ttyACM0`は実際に認識されたシリアルポートへ置き換えてください。
+**ESP-IDF v5.4.4またはv5.5.4** を使用できます。v5.5.4では、実験的なPicolibcではなく**Newlib**を使用してください。本プロジェクトの`sdkconfig.defaults`はNewlibを明示的に選択しています。別バージョンで生成済みの`build/`や`sdkconfig`があるとBluetoothまたはCライブラリの構成が混在するため、切替時は必ず削除します。`/dev/ttyACM0`は実際に認識されたシリアルポートへ置き換えてください。
 
 ```bash
 # ESP-IDF v5.4.4の導入（初回のみ）
@@ -64,7 +64,21 @@ idf.py -p /dev/ttyACM0 flash monitor
 
 ### `esp_bt.h` が見つからない場合
 
-`fatal error: esp_bt.h: No such file or directory`は、プロジェクトを別のESP-IDF版で構成済みであるか、Bluetoothコンポーネントが無効な状態で生成された`build/`・`sdkconfig`を再利用した場合に発生します。本プロジェクトは**ESP-IDF v5.4.4**を固定対象としています。上記のコマンドどおりにESP-IDF v5.4.4を有効化したうえで、`rm -rf build sdkconfig sdkconfig.old`から必ず実行してください。`main/CMakeLists.txt`ではBluetooth APIを提供する`bt`コンポーネントも明示的に依存関係へ含めています。[1]
+`fatal error: esp_bt.h: No such file or directory`は、プロジェクトを別のESP-IDF版で構成済みであるか、Bluetoothコンポーネントが無効な状態で生成された`build/`・`sdkconfig`を再利用した場合に発生します。上記のコマンドどおりに対象バージョンのESP-IDFを有効化したうえで、`build/`と`sdkconfig`を削除してから必ず実行してください。`main/CMakeLists.txt`ではBluetooth APIを提供する`bt`コンポーネントも明示的に依存関係へ含めています。[1]
+
+### Windows／ESP-IDF v5.5.4でPicolibc・Newlib競合が出る場合
+
+`_READ_WRITE_RETURN_TYPE`未定義や`__FILE`の型競合は、**PicolibcとNewlibのヘッダーが同時に選ばれた状態**を示します。WindowsのESP-IDF PowerShellでプロジェクト直下へ移動し、更新済みの`sdkconfig.defaults`を取得してから、次のコマンドで構成を完全に作り直してください。
+
+```powershell
+git pull
+Remove-Item -Recurse -Force build -ErrorAction SilentlyContinue
+Remove-Item -Force sdkconfig, sdkconfig.old -ErrorAction SilentlyContinue
+idf.py set-target esp32s3
+idf.py build
+```
+
+`sdkconfig.defaults`には`CONFIG_LIBC_NEWLIB=y`と`# CONFIG_LIBC_PICOLIBC is not set`が含まれています。PicolibcはESP-IDF 5.5では実験的機能であるため、本プロジェクトでは使用しません。[4]
 
 ## カスタマイズ
 
@@ -79,3 +93,4 @@ idf.py -p /dev/ttyACM0 flash monitor
 [1]: https://github.com/espressif/esp-idf/tree/master/examples/bluetooth/bluedroid/ble/ble_hid_device_demo "Espressif BLE HID Device Demo"
 [2]: https://docs.m5stack.com/en/unit/joystick_1.1 "M5Stack Unit Joystick v1.1"
 [3]: https://github.com/m5stack/M5Unified "M5Unified: AtomS3 Lite I²C pin definition"
+[4]: https://github.com/espressif/esp-idf/blob/v5.5.4/components/newlib/Kconfig "ESP-IDF v5.5.4 Newlib and Picolibc configuration"
