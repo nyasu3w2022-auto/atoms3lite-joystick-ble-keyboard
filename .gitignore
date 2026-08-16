@@ -1,0 +1,13 @@
+# ESP-IDF build products
+/build/
+/sdkconfig
+/sdkconfig.old
+/sdkconfig.defaults
+
+# IDE and operating-system files
+.vscode/
+.idea/
+.DS_Store
+
+# Python virtual environments
+.venv/
