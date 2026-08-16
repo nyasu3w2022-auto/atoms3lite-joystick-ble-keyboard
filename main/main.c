@@ -49,8 +49,10 @@
 #define HIDD_DEVICE_NAME        "AtomS3 Joystick KB"
 #define HIDD_APPEARANCE         0x03c0  /* HID Generic */
 
-static uint16_t s_hid_conn_id;
-static bool s_secure_connection;
+/* Connection ID 0 is valid, so track its validity separately. */
+static volatile uint16_t s_hid_conn_id;
+static volatile bool s_hid_connected;
+static volatile bool s_secure_connection;
 static i2c_master_dev_handle_t s_joystick;
 
 static uint8_t s_service_uuid128[] = {
@@ -159,11 +161,14 @@ static void hidd_event_callback(esp_hidd_cb_event_t event, esp_hidd_cb_param_t *
 
     case ESP_HIDD_EVENT_BLE_CONNECT:
         s_hid_conn_id = param->connect.conn_id;
-        ESP_LOGI(TAG, "BLE host connected");
+        s_hid_connected = true;
+        ESP_LOGI(TAG, "BLE host connected (conn_id=%u)", s_hid_conn_id);
         break;
 
     case ESP_HIDD_EVENT_BLE_DISCONNECT:
+        s_hid_connected = false;
         s_secure_connection = false;
+        s_hid_conn_id = 0;
         ESP_LOGI(TAG, "BLE host disconnected; restarting advertising");
         ESP_ERROR_CHECK(esp_ble_gap_start_advertising(&s_adv_params));
         break;
@@ -236,14 +241,14 @@ static void joystick_keyboard_task(void *argument)
             stable_count = candidate_count;
         }
 
-        if (s_secure_connection &&
+        if (s_hid_connected && s_secure_connection &&
             !keys_equal(stable, stable_count, sent, sent_count)) {
             esp_hidd_send_keyboard_value(s_hid_conn_id, 0, stable, stable_count);
             memcpy(sent, stable, stable_count);
             sent_count = stable_count;
         }
 
-        if (!s_secure_connection && sent_count != 0) {
+        if ((!s_hid_connected || !s_secure_connection) && sent_count != 0) {
             /* Prevent stale state after a host disconnects while a direction is held. */
             sent_count = 0;
         }
@@ -264,9 +269,14 @@ static void bluetooth_init(void)
     ESP_ERROR_CHECK(esp_bluedroid_init_with_cfg(&bluedroid_cfg));
     ESP_ERROR_CHECK(esp_bluedroid_enable());
 
+    /*
+     * esp_hidd_profile_init() clears the HID profile environment. It must run
+     * before registering callbacks/apps, otherwise it erases the GATT interface
+     * assigned by the registration event and notifications use an invalid ID.
+     */
+    ESP_ERROR_CHECK(esp_hidd_profile_init());
     ESP_ERROR_CHECK(esp_ble_gap_register_callback(gap_event_handler));
     ESP_ERROR_CHECK(esp_hidd_register_callbacks(hidd_event_callback));
-    ESP_ERROR_CHECK(esp_hidd_profile_init());
 
     const esp_ble_auth_req_t auth_req = ESP_LE_AUTH_BOND;
     const esp_ble_io_cap_t io_cap = ESP_IO_CAP_NONE;
