@@ -7,7 +7,7 @@ idf_component_register(
         "esp_hidd_prf_api.c"
         "hid_dev.c"
         "hid_device_le_prf.c"
-    PRIV_REQUIRES
+    REQUIRES
         bt
         nvs_flash
         esp_driver_i2c

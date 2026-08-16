@@ -1,0 +1,14 @@
+ESP-IDF v5.4.4
+
+This project is tested against ESP-IDF v5.4.4 for the ESP32-S3 target.
+
+Setup:
+  git clone --branch v5.4.4 --depth 1 --recursive https://github.com/espressif/esp-idf.git ~/esp/esp-idf-v5.4.4
+  cd ~/esp/esp-idf-v5.4.4
+  ./install.sh esp32s3
+  . ./export.sh
+
+Before the first project build, or after switching ESP-IDF versions:
+  rm -rf build sdkconfig sdkconfig.old
+  idf.py set-target esp32s3
+  idf.py build

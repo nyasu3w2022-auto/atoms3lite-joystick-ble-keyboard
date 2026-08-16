@@ -25,7 +25,7 @@ M5Stack **AtomS3 Lite** と **Unit Joystick v1.1（U024-C）** を、標準的�
 | M5Stack Unit Joystick v1.1 | 1 | 型番U024-C、I²Cアドレスは`0x52` |
 | HY2.0-4P Groveケーブル | 1 | Joystick Unitの付属品を使用可能 |
 | USB Type-Cケーブル | 1 | 給電と書き込み用 |
-| ESP-IDF | 5.2以降 | ESP32-S3向けツールチェーンを含むもの |
+| ESP-IDF | **v5.4.4固定** | ESP32-S3向けツールチェーンを含むもの。バージョンは`IDF_VERSION`にも記載 |
 
 ## 配線
 
@@ -42,17 +42,29 @@ AtomS3 LiteのHY2.0-4PポートとJoystick Unitを、Groveケーブルでその�
 
 ## ビルドと書き込み
 
-ESP-IDFの環境を有効化してから、以下を実行します。`/dev/ttyACM0`は実際に認識されたシリアルポートへ置き換えてください。
+**ESP-IDF v5.4.4** を使用してください。別バージョンで生成済みの`build/`や`sdkconfig`があるとBluetoothのヘッダー構成が混在するため、切替時は必ず削除します。`/dev/ttyACM0`は実際に認識されたシリアルポートへ置き換えてください。
 
 ```bash
-cd atoms3lite-joystick-ble-keyboard
-. "$IDF_PATH/export.sh"
+# ESP-IDF v5.4.4の導入（初回のみ）
+git clone --branch v5.4.4 --depth 1 --recursive \
+  https://github.com/espressif/esp-idf.git ~/esp/esp-idf-v5.4.4
+cd ~/esp/esp-idf-v5.4.4
+./install.sh esp32s3
+. ./export.sh
+
+# プロジェクトのクリーンビルド
+cd /path/to/atoms3lite-joystick-ble-keyboard
+rm -rf build sdkconfig sdkconfig.old
 idf.py set-target esp32s3
 idf.py build
 idf.py -p /dev/ttyACM0 flash monitor
 ```
 
 起動後、ホスト側のBluetooth設定で **`AtomS3 Joystick KB`** を検索し、キーボードとしてペアリングします。USBケーブルは給電と書き込みにのみ使用し、キー入力はBLEで送信されます。
+
+### `esp_bt.h` が見つからない場合
+
+`fatal error: esp_bt.h: No such file or directory`は、プロジェクトを別のESP-IDF版で構成済みであるか、Bluetoothコンポーネントが無効な状態で生成された`build/`・`sdkconfig`を再利用した場合に発生します。本プロジェクトは**ESP-IDF v5.4.4**を固定対象としています。上記のコマンドどおりにESP-IDF v5.4.4を有効化したうえで、`rm -rf build sdkconfig sdkconfig.old`から必ず実行してください。`main/CMakeLists.txt`ではBluetooth APIを提供する`bt`コンポーネントも明示的に依存関係へ含めています。[1]
 
 ## カスタマイズ
 
