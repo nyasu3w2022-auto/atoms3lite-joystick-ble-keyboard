@@ -14,3 +14,8 @@ CONFIG_PARTITION_TABLE_SINGLE_APP_LARGE=y
 # This avoids mixing Picolibc stdio headers with Newlib sys/reent.h.
 CONFIG_LIBC_NEWLIB=y
 # CONFIG_LIBC_PICOLIBC is not set
+
+# Preserve BLE HID bonding keys across an AtomS3 restart or power cycle.
+CONFIG_BT_BLE_SMP_ENABLE=y
+CONFIG_BT_BLE_SMP_BOND_NVS_FLASH=y
+CONFIG_BT_SMP_MAX_BONDS=1

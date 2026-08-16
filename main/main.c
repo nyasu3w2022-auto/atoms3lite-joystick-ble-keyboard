@@ -55,6 +55,12 @@ static volatile bool s_hid_connected;
 static volatile bool s_secure_connection;
 static i2c_master_dev_handle_t s_joystick;
 
+static void log_bond_count(const char *context)
+{
+    const int bond_count = esp_ble_get_bond_device_num();
+    ESP_LOGI(TAG, "%s: %d stored BLE bond record(s)", context, bond_count);
+}
+
 static uint8_t s_service_uuid128[] = {
     /* LSB <--------------------------------------------------------------> MSB */
     0xfb, 0x34, 0x9b, 0x5f, 0x80, 0x00, 0x00, 0x80,
@@ -196,7 +202,13 @@ static void gap_event_handler(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param
 
     case ESP_GAP_BLE_AUTH_CMPL_EVT:
         s_secure_connection = param->ble_security.auth_cmpl.success;
-        ESP_LOGI(TAG, "Pairing %s", s_secure_connection ? "succeeded" : "failed");
+        if (s_secure_connection) {
+            ESP_LOGI(TAG, "Pairing succeeded");
+            log_bond_count("After pairing");
+        } else {
+            ESP_LOGW(TAG, "Pairing failed (reason=0x%02x)",
+                     param->ble_security.auth_cmpl.fail_reason);
+        }
         break;
 
     default:
@@ -269,6 +281,7 @@ static void bluetooth_init(void)
     esp_bluedroid_config_t bluedroid_cfg = BT_BLUEDROID_INIT_CONFIG_DEFAULT();
     ESP_ERROR_CHECK(esp_bluedroid_init_with_cfg(&bluedroid_cfg));
     ESP_ERROR_CHECK(esp_bluedroid_enable());
+    log_bond_count("At startup");
 
     /*
      * esp_hidd_profile_init() clears the HID profile environment. It must run

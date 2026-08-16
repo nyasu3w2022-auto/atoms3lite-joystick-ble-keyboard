@@ -80,6 +80,22 @@ idf.py build
 
 `sdkconfig.defaults`には`CONFIG_LIBC_NEWLIB=y`と`# CONFIG_LIBC_PICOLIBC is not set`が含まれています。PicolibcはESP-IDF 5.5では実験的機能であるため、本プロジェクトでは使用しません。[4]
 
+### 再起動後に再接続できない場合
+
+本プロジェクトは`CONFIG_BT_BLE_SMP_BOND_NVS_FLASH=y`を明示して、BLE HIDのボンド鍵をNVSへ保存します。[5] この設定を反映するには、`build/`・`sdkconfig`・`sdkconfig.old`を削除して再ビルドしてください。更新前のファームウェアで作られた鍵は不整合になるため、更新後はPCのBluetooth設定から**`AtomS3 Joystick KB`を削除**し、AtomS3のフラッシュを消去してから再書き込み・再ペアリングしてください。
+
+```powershell
+git pull
+Remove-Item -Recurse -Force build -ErrorAction SilentlyContinue
+Remove-Item -Force sdkconfig, sdkconfig.old -ErrorAction SilentlyContinue
+idf.py set-target esp32s3
+idf.py build
+idf.py -p COMx erase-flash
+idf.py -p COMx flash monitor
+```
+
+初回ペアリング直後には`After pairing: 1 stored BLE bond record(s)`、AtomS3再起動後には`At startup: 1 stored BLE bond record(s)`と表示されることを確認してください。
+
 ## カスタマイズ
 
 デバイス名、I²Cピン、ポーリング周期、方向判定の閾値は`main/main.c`の冒頭にある定数で変更できます。ジョイスティックのZボタンを使わない場合は、`joystick_to_keys()`内の`HID_KEY_ENTER`を追加する部分を削除してください。
@@ -94,3 +110,4 @@ idf.py build
 [2]: https://docs.m5stack.com/en/unit/joystick_1.1 "M5Stack Unit Joystick v1.1"
 [3]: https://github.com/m5stack/M5Unified "M5Unified: AtomS3 Lite I²C pin definition"
 [4]: https://github.com/espressif/esp-idf/blob/v5.5.4/components/newlib/Kconfig "ESP-IDF v5.5.4 Newlib and Picolibc configuration"
+[5]: https://github.com/espressif/esp-idf/blob/v5.5.4/components/bt/host/bluedroid/Kconfig.in "ESP-IDF v5.5.4 BLE SMP bonding key storage configuration"
