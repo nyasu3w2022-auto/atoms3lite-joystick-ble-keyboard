@@ -121,11 +121,12 @@ static size_t joystick_to_keys(const uint8_t report[JOYSTICK_REPORT_SIZE], uint8
     const uint8_t button = report[2];
     size_t key_count = 0;
 
-    /* X: low=left, high=right. Y: low=up, high=down. */
+    /* The Unit Joystick's X axis is reversed relative to its physical left/right direction. */
+    /* X: low=right, high=left. Y: low=up, high=down. */
     if (x <= AXIS_LOW_THRESHOLD) {
-        keys[key_count++] = HID_KEY_LEFT_ARROW;
-    } else if (x >= AXIS_HIGH_THRESHOLD) {
         keys[key_count++] = HID_KEY_RIGHT_ARROW;
+    } else if (x >= AXIS_HIGH_THRESHOLD) {
+        keys[key_count++] = HID_KEY_LEFT_ARROW;
     }
 
     if (y <= AXIS_LOW_THRESHOLD) {
